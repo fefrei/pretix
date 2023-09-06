@@ -630,7 +630,7 @@ class Order(LockModel, LoggedModel):
         positions = list(
             self.positions.all().annotate(
                 has_variations=Exists(ItemVariation.objects.filter(item_id=OuterRef('item_id'))),
-                has_checkin=Exists(Checkin.objects.filter(position_id=OuterRef('pk')))
+                has_checkin=Exists(Checkin.objects.filter(position_id=OuterRef('pk'), list__consider_tickets_used=True))
             ).select_related('item').prefetch_related('issued_gift_cards')
         )
         if self.event.settings.change_allow_user_if_checked_in:
@@ -662,7 +662,7 @@ class Order(LockModel, LoggedModel):
             return False
         positions = list(
             self.positions.all().annotate(
-                has_checkin=Exists(Checkin.objects.filter(position_id=OuterRef('pk')))
+                has_checkin=Exists(Checkin.objects.filter(position_id=OuterRef('pk'), list__consider_tickets_used=True))
             ).select_related('item').prefetch_related('issued_gift_cards')
         )
         cancelable = all([op.item.allow_cancel and not op.has_checkin and not op.blocked for op in positions])
@@ -817,7 +817,7 @@ class Order(LockModel, LoggedModel):
 
         positions = list(
             self.positions.all().annotate(
-                has_checkin=Exists(Checkin.objects.filter(position_id=OuterRef('pk')))
+                has_checkin=Exists(Checkin.objects.filter(position_id=OuterRef('pk'), list__consider_tickets_used=True))
             ).select_related('item').prefetch_related('item__questions')
         )
         if not self.event.settings.allow_modifications_after_checkin:
